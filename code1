@@ -1,0 +1,58 @@
+import pandas as pd
+from pytrends.request import TrendReq
+import matplotlib.pyplot as plt
+import time
+
+# Connect to Google Trends with English language settings and a central timezone offset.
+Trending_topics = TrendReq(hl='en-US', tz=360)
+
+
+# Set up the search for "Cloud Computing" data over the last 12 months.
+keywords_list=["Cloud Computing"]
+Trending_topics.build_payload(keywords_list,cat=0, timeframe='today 12-m')
+time.sleep(5)
+
+# Fetch historical data, sort it to find the weeks with peak search interest, and print the top 10.
+data = Trending_topics.interest_over_time()
+data = data.sort_values(by="Cloud Computing", ascending = False)
+data = data.head(10)
+print()
+print(data)
+
+# Pull search data for early 2024, rank the dates by highest volume, and print the top 10 peaks.
+keywords_list = ["Cloud Computing"]
+Trending_topics.build_payload(keywords_list, cat=0, timeframe='2024-01-01 2024-02-01', geo='', gprop='')
+data = Trending_topics.interest_over_time()
+data = data.sort_values(by="Cloud Computing", ascending = False)
+data = data.head(10)
+print()
+print(data)
+
+# Fetch search data by region, sort it to find where it's most popular, and print the top 10 countries.
+data = Trending_topics.interest_by_region()
+data = data.sort_values(by="Cloud Computing", 
+                        ascending = False)
+data = data.head(10)
+print()
+print(data)
+
+# Convert country data into a standard table format and display it as a clean bar chart.
+data.reset_index().plot(x='geoName', y='Cloud Computing',
+                        figsize=(10,5), kind="bar")
+plt.style.use('fivethirtyeight')
+data.reset_index().plot(x='geoName', y='Cloud Computing', figsize=(10,5), kind="bar", title='Top 10 Countries Searching for "Cloud Computing"', xlabel='Country', ylabel='Search Interest Index')
+plt.show()
+
+# Safely fetch related search phrases, printing a friendly warning if no data is available.
+try:
+    Trending_topics.build_payload(keywords_list=['Cloud Computing'])
+    related_queries = Trending_topics.related_queries()
+    related_queries.values()
+except (KeyError, IndexError):
+    print("No related queries found for 'Cloud Computing'")
+
+# Fetch alternative keyword suggestions from Google and clean up the table by removing the ID column.
+keywords = Trending_topics.suggestions(
+  keyword='Cloud Computing')
+df = pd.DataFrame(keywords)
+df.drop(columns= 'mid')
